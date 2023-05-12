@@ -1,0 +1,276 @@
+/*
+ * Copyright (C) 2023 Fraunhofer Institut IOSB, Fraunhoferstr. 1, D 76131
+ * Karlsruhe, Germany.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+package de.fraunhofer.iosb.ilt.frostclient.model;
+
+import de.fraunhofer.iosb.ilt.frostclient.SensorThingsService;
+import de.fraunhofer.iosb.ilt.frostclient.dao.BaseDao;
+import de.fraunhofer.iosb.ilt.frostclient.dao.Dao;
+import de.fraunhofer.iosb.ilt.frostclient.exception.ServiceFailureException;
+import de.fraunhofer.iosb.ilt.frostclient.model.property.EntityPropertyMain;
+import de.fraunhofer.iosb.ilt.frostclient.model.property.NavigationProperty;
+import de.fraunhofer.iosb.ilt.frostclient.model.property.NavigationPropertyEntity;
+import de.fraunhofer.iosb.ilt.frostclient.model.property.NavigationPropertyEntitySet;
+import de.fraunhofer.iosb.ilt.frostclient.query.Query;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import org.slf4j.LoggerFactory;
+
+/**
+ * The Entity model element.
+ */
+public class Entity {
+
+    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(Entity.class.getName());
+
+    private EntityType entityType;
+    private final Map<EntityPropertyMain, Object> entityProperties = new HashMap<>();
+    private final Map<NavigationProperty, Object> navProperties = new HashMap<>();
+    private final Set<Property> setProperties = new HashSet<>();
+
+    /**
+     * The STA service this entity is loaded from.
+     */
+    private SensorThingsService service;
+
+    /**
+     * The selfLink or @id of this entity.
+     */
+    private String selfLink;
+
+    public Entity(EntityType entityType) {
+        this.entityType = entityType;
+    }
+
+    public Entity(EntityType entityType, Id id) {
+        this.entityType = entityType;
+        setId(id);
+    }
+
+    public final Id getId() {
+        return getProperty(entityType.getPrimaryKey());
+    }
+
+    public final Entity setId(Id id) {
+        entityProperties.put(entityType.getPrimaryKey(), id);
+        setProperties.add(entityType.getPrimaryKey());
+        return this;
+    }
+
+    public String getSelfLink() {
+        return selfLink;
+    }
+
+    public Entity setSelfLink(String selfLink) {
+        this.selfLink = selfLink;
+        return this;
+    }
+
+    public EntityType getEntityType() {
+        return entityType;
+    }
+
+    public Entity setEntityType(EntityType entityType) {
+        if (this.entityType != null) {
+            throw new IllegalArgumentException("the type of this entity is alread yet to " + this.entityType.entityName);
+        }
+        this.entityType = entityType;
+        return this;
+    }
+
+    public boolean isSetProperty(Property property) {
+        if (property == ModelRegistry.EP_SELFLINK) {
+            return true;
+        }
+        return setProperties.contains(property);
+    }
+
+    public <P> P getProperty(Property<P> property) {
+        return getProperty(property, true);
+    }
+
+    public <P> P getProperty(Property<P> property, boolean autoLoad) {
+        if (property == null) {
+            return null;
+        }
+        if (property == ModelRegistry.EP_SELFLINK) {
+            return (P) getSelfLink();
+        }
+        if (property instanceof EntityPropertyMain epm) {
+            return (P) entityProperties.get(epm);
+        }
+        if (property instanceof NavigationPropertyEntity npe) {
+            Entity entity = (Entity) navProperties.get(npe);
+            if (entity == null && autoLoad) {
+                try {
+                    entity = service.dao(npe.getEntityType()).find(this, npe);
+                    setProperty(npe, entity);
+                } catch (ServiceFailureException ex) {
+                    LOGGER.error("Failed to load linked entity {}", npe, ex);
+                }
+            }
+            return (P) entity;
+        }
+        if (property instanceof NavigationPropertyEntitySet npes) {
+            EntitySet entitySet = (EntitySet) navProperties.get(npes);
+            if (entitySet == null && autoLoad) {
+                entitySet = new EntitySetImpl(npes);
+                setProperty(npes, entitySet);
+            }
+            return (P) entitySet;
+        }
+        return null;
+    }
+
+    public <P> Entity setProperty(Property<P> property, P value) {
+        if (property == ModelRegistry.EP_SELFLINK) {
+            setSelfLink(String.valueOf(value));
+        } else if (property instanceof EntityPropertyMain epm) {
+            entityProperties.put(epm, value);
+            setProperties.add(property);
+        } else if (property instanceof NavigationProperty np) {
+            navProperties.put(np, value);
+            if (value == null) {
+                setProperties.remove(property);
+            } else {
+                setProperties.add(property);
+            }
+        }
+        return this;
+    }
+
+    public Entity unsetProperty(Property property) {
+        if (property instanceof EntityPropertyMain epm) {
+            entityProperties.remove(epm);
+        } else if (property instanceof NavigationProperty np) {
+            navProperties.remove(np);
+        }
+        setProperties.remove(property);
+        return this;
+    }
+
+    public Entity addNavigationEntity(NavigationPropertyEntitySet navProperty, Entity linkedEntity) {
+        EntitySet entitySet = getProperty(navProperty);
+        if (entitySet == null) {
+            entitySet = new EntitySetImpl(navProperty);
+            setProperty(navProperty, entitySet);
+        }
+        entitySet.add(linkedEntity);
+        return this;
+    }
+
+    public void setEntityPropertiesSet(boolean set, boolean entityPropertiesOnly) {
+        if (!set) {
+            setProperties.clear();
+        } else {
+            for (EntityPropertyMain property : entityType.getEntityProperties()) {
+                if (!property.isReadOnly()) {
+                    setProperties.add(property);
+                }
+            }
+            if (!entityPropertiesOnly) {
+                setProperties.addAll(entityType.getNavigationEntities());
+            }
+        }
+    }
+
+    public boolean isEmpty() {
+        return entityProperties.get(entityType.getPrimaryKey()) != null;
+    }
+
+    /**
+     * Check if the entity is associated with a service or not.
+     *
+     * @return true if the entity is associated with a service.
+     */
+    public boolean hasService() {
+        return service != null;
+    }
+
+    public SensorThingsService getService() {
+        return service;
+    }
+
+    public void setService(SensorThingsService service) {
+        this.service = service;
+    }
+
+    /**
+     * Creates a copy of the entity, with only the ID field set. Useful when
+     * creating a new entity that links to this entity.
+     *
+     * @return a copy with only the ID field set.
+     */
+    public Entity withOnlyId() {
+        Entity copy = new Entity(entityType, getId());
+        copy.setService(service);
+        return copy;
+    }
+
+    public Query query(NavigationPropertyEntitySet navigationPropery) {
+        if (service == null) {
+            throw new IllegalArgumentException("Can not query from an entity not associated with a service.");
+        }
+        return new Query(service, this, navigationPropery);
+    }
+
+    public Dao<Entity> dao(NavigationPropertyEntitySet navigationPropery) {
+        if (service == null) {
+            throw new IllegalArgumentException("Can not query from an entity not associated with a service.");
+        }
+        return new BaseDao(service, this, navigationPropery);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Entity other = (Entity) obj;
+        if (!Objects.equals(this.entityType, other.entityType)) {
+            return false;
+        }
+        if (!Objects.equals(this.entityProperties, other.entityProperties)) {
+            return false;
+        }
+        return Objects.equals(this.navProperties, other.navProperties);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(entityType, entityProperties, navProperties);
+    }
+
+    @Override
+    public String toString() {
+        return "Entity: " + entityType;
+    }
+}
