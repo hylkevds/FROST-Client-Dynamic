@@ -8,7 +8,7 @@
     <packaging>jar</packaging>
 
     <name>FROST-Client-Dynamic</name>
-    <description>A client implementation of the OGC SensorThings API.</description>
+    <description>A client implementation of the OGC SensorThings API with a dynamic data model.</description>
     <url>https://github.com/FraunhoferIOSB/FROST-Client</url>
     <inceptionYear>2023</inceptionYear>
 
