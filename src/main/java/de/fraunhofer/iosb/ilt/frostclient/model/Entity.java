@@ -26,6 +26,7 @@ import de.fraunhofer.iosb.ilt.frostclient.SensorThingsService;
 import de.fraunhofer.iosb.ilt.frostclient.dao.BaseDao;
 import de.fraunhofer.iosb.ilt.frostclient.dao.Dao;
 import de.fraunhofer.iosb.ilt.frostclient.exception.ServiceFailureException;
+import de.fraunhofer.iosb.ilt.frostclient.exception.StatusCodeException;
 import de.fraunhofer.iosb.ilt.frostclient.model.property.EntityPropertyMain;
 import de.fraunhofer.iosb.ilt.frostclient.model.property.NavigationProperty;
 import de.fraunhofer.iosb.ilt.frostclient.model.property.NavigationPropertyEntity;
@@ -111,6 +112,28 @@ public class Entity {
         return getProperty(property, true);
     }
 
+    public <P> P getProperty(NavigationPropertyEntity property) throws ServiceFailureException {
+        return getProperty(property, true);
+    }
+
+    public <P> P getProperty(NavigationPropertyEntity npe, boolean autoLoad) throws ServiceFailureException {
+        Entity entity = (Entity) navProperties.get(npe);
+        if (entity == null && autoLoad) {
+            try {
+                entity = service.dao(npe.getEntityType()).find(this, npe);
+                setProperty(npe, entity);
+            } catch (StatusCodeException ex) {
+                if (ex.getStatusCode() == 404) {
+                    // The entity doesn't have this navLink, all is fine.
+                    return null;
+                }
+                // Something else went wrong, re-throw.
+                throw ex;
+            }
+        }
+        return (P) entity;
+    }
+
     public <P> P getProperty(Property<P> property, boolean autoLoad) {
         if (property == null) {
             return null;
@@ -122,16 +145,12 @@ public class Entity {
             return (P) entityProperties.get(epm);
         }
         if (property instanceof NavigationPropertyEntity npe) {
-            Entity entity = (Entity) navProperties.get(npe);
-            if (entity == null && autoLoad) {
-                try {
-                    entity = service.dao(npe.getEntityType()).find(this, npe);
-                    setProperty(npe, entity);
-                } catch (ServiceFailureException ex) {
-                    LOGGER.error("Failed to load linked entity {}", npe, ex);
-                }
+            try {
+                return getProperty(npe, autoLoad);
+            } catch (ServiceFailureException ex) {
+                LOGGER.error("Failed to load linked entity {}", npe, ex.getMessage());
+                throw new RuntimeException(ex);
             }
-            return (P) entity;
         }
         if (property instanceof NavigationPropertyEntitySet npes) {
             EntitySet entitySet = (EntitySet) navProperties.get(npes);
