@@ -61,6 +61,7 @@ public class ModelRegistry {
      * All property types by their name.
      */
     private final Map<String, PropertyType> propertyTypes = new TreeMap<>();
+    private boolean initialised;
 
     /**
      * Register a new entity type. Registering the same type twice is a no-op,
@@ -128,10 +129,14 @@ public class ModelRegistry {
     }
 
     public synchronized void initFinalise() {
+        if (initialised) {
+            return;
+        }
         LOGGER.info("Finalising {} EntityTypes.", entityTypes.size());
         for (EntityType type : entityTypes) {
             type.init();
         }
+        initialised = true;
     }
 
 }
