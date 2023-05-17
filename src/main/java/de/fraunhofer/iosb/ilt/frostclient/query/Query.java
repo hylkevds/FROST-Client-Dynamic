@@ -176,7 +176,13 @@ public class Query implements QueryRequest, QueryParameter {
         EntitySet list;
         HttpGet httpGet;
         try {
-            URIBuilder uriBuilder = new URIBuilder(service.getFullPath(parent, navigationLink).toURI());
+            URIBuilder uriBuilder;
+            if (parent == null) {
+                uriBuilder = new URIBuilder(service.getFullPath(entityType).toURI());
+            } else {
+                uriBuilder = new URIBuilder(service.getFullPath(parent, navigationLink).toURI());
+            }
+
             uriBuilder.addParameters(params);
             httpGet = new HttpGet(uriBuilder.build());
         } catch (URISyntaxException ex) {
