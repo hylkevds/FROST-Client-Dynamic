@@ -46,11 +46,24 @@ public class TimeInstant implements TimeObject {
         return new TimeInstant(SystemClock.currentMoment());
     }
 
+    public static TimeInstant create(Moment moment) {
+        if (moment == null) {
+            return null;
+        }
+        return new TimeInstant(moment);
+    }
+
     public static TimeInstant create(Instant instant) {
+        if (instant == null) {
+            return null;
+        }
         return new TimeInstant(Moment.from(instant));
     }
 
     public static TimeInstant create(ZonedDateTime zdt) {
+        if (zdt == null) {
+            return null;
+        }
         return new TimeInstant(Moment.from(zdt.toInstant()));
     }
 

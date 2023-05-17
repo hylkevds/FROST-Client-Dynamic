@@ -34,6 +34,7 @@ import de.fraunhofer.iosb.ilt.frostclient.model.property.NavigationPropertyEntit
 import de.fraunhofer.iosb.ilt.frostclient.query.Query;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -197,6 +198,20 @@ public class Entity {
             setProperty(navProperty, entitySet);
         }
         entitySet.add(linkedEntity);
+        return this;
+    }
+
+    public Entity addNavigationEntity(NavigationPropertyEntitySet navProperty, List<Entity> linkedEntities) {
+        for (Entity linkedEntity : linkedEntities) {
+            addNavigationEntity(navProperty, linkedEntity);
+        }
+        return this;
+    }
+
+    public Entity addNavigationEntity(NavigationPropertyEntitySet navProperty, Entity... linkedEntities) {
+        for (Entity linkedEntity : linkedEntities) {
+            addNavigationEntity(navProperty, linkedEntity);
+        }
         return this;
     }
 

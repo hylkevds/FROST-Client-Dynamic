@@ -109,11 +109,21 @@ public class TimeInterval implements TimeObject, ComplexValue {
 
     @Override
     public Object get(String name) {
-        return switch (name) {
-            case KEY_INTERVAL_START -> interval.getStartAsMoment();
-            case KEY_INTERVAL_END -> interval.getEndAsMoment();
-            default -> throw new IllegalArgumentException("Unknown sub-property: " + name);
-        };
+        switch (name) {
+            case KEY_INTERVAL_START:
+                return interval.getStartAsMoment();
+            case KEY_INTERVAL_END:
+                return interval.getEndAsMoment();
+            default:
+                throw new IllegalArgumentException("Unknown sub-property: " + name);
+        }
     }
 
+    public Moment getStart() {
+        return interval.getStartAsMoment();
+    }
+
+    public Moment getEnd() {
+        return interval.getEndAsMoment();
+    }
 }

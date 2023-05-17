@@ -47,6 +47,14 @@ public class TimeValue implements TimeObject, ComplexValue {
         this.interval = timeInterval;
     }
 
+    public static TimeValue create(TimeInstant instant) {
+        return new TimeValue(instant);
+    }
+
+    public static TimeValue create(TimeInterval timeInterval) {
+        return new TimeValue(timeInterval);
+    }
+
     public static TimeValue create(Moment start, Moment end) {
         return new TimeValue(TimeInterval.create(start, end));
     }

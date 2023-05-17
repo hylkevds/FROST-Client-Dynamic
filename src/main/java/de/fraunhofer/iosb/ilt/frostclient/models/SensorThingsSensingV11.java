@@ -289,7 +289,7 @@ public class SensorThingsSensingV11 {
     }
 
     public Entity newLocation(String name, String description, String encodingType, Object location) {
-        return new Entity(etLocation)
+        return newLocation()
                 .setProperty(EP_NAME, name)
                 .setProperty(EP_DESCRIPTION, description)
                 .setProperty(EP_ENCODINGTYPE, encodingType)
@@ -305,10 +305,14 @@ public class SensorThingsSensingV11 {
     }
 
     public Entity newDatastream(String name, String description, UnitOfMeasurement uom) {
+        return newDatastream(name, description, Constants.OM_MEASUREMENT, uom);
+    }
+
+    public Entity newDatastream(String name, String description, String observationType, UnitOfMeasurement uom) {
         return newDatastream()
                 .setProperty(EP_NAME, name)
                 .setProperty(EP_DESCRIPTION, description)
-                .setProperty(EP_OBSERVATIONTYPE, Constants.OM_MEASUREMENT)
+                .setProperty(EP_OBSERVATIONTYPE, observationType)
                 .setProperty(EP_UNITOFMEASUREMENT, uom);
     }
 
@@ -356,14 +360,59 @@ public class SensorThingsSensingV11 {
                 .setProperty(EP_RESULT, result);
     }
 
-    public Entity newObservation(Object result, ZonedDateTime phenomenonTime) {
+    public Entity newObservation(Object result, Entity datastream) {
+        if (!etDatastream.equals(datastream.getEntityType())) {
+            throw new IllegalArgumentException("Datastream Entity must have entityType Datastream, not " + datastream.getEntityType());
+        }
+        return newObservation()
+                .setProperty(EP_RESULT, result)
+                .setProperty(npObservationDatastream, datastream);
+    }
+
+    public Entity newObservation(Object result, TimeValue phenomenonTime) {
         return newObservation(result)
-                .setProperty(EP_PHENOMENONTIME, TimeValue.create(phenomenonTime));
+                .setProperty(EP_PHENOMENONTIME, phenomenonTime);
+    }
+
+    public Entity newObservation(Object result, ZonedDateTime phenomenonTime) {
+        return newObservation(result, TimeValue.create(phenomenonTime));
+    }
+
+    public Entity newObservation(Object result, TimeValue phenomenonTime, Entity datastream) {
+        return newObservation(result, datastream)
+                .setProperty(EP_PHENOMENONTIME, phenomenonTime);
+    }
+
+    public Entity newObservation(Object result, ZonedDateTime phenomenonTime, Entity datastream) {
+        return newObservation(result, TimeValue.create(phenomenonTime), datastream);
     }
 
     public Entity newObservation(Object result, TimeInterval phenomenonTime) {
-        return newObservation(result)
-                .setProperty(EP_PHENOMENONTIME, new TimeValue(phenomenonTime));
+        return newObservation(result, new TimeValue(phenomenonTime));
+    }
+
+    public Entity newObservation(Object result, TimeInterval phenomenonTime, Entity datastream) {
+        return newObservation(result, new TimeValue(phenomenonTime), datastream);
+    }
+
+    public Entity newHistoricalLocation() {
+        return new Entity(etHistoricalLocation);
+    }
+
+    public Entity newHistoricalLocation(Id id) {
+        return new Entity(etHistoricalLocation, id);
+    }
+
+    public Entity newHistoricalLocation(ZonedDateTime time) {
+        return newHistoricalLocation()
+                .setProperty(EP_TIME, TimeInstant.create(time));
+    }
+
+    public Entity newHistoricalLocation(ZonedDateTime time, Entity thing, Entity... location) {
+        return newHistoricalLocation()
+                .setProperty(EP_TIME, TimeInstant.create(time))
+                .setProperty(npHistlocThing, thing)
+                .addNavigationEntity(npHistlocLocations, location);
     }
 
     public Entity newFeatureOfInterest() {
@@ -373,4 +422,17 @@ public class SensorThingsSensingV11 {
     public Entity newFeatureOfInterest(Id id) {
         return new Entity(etFeatureOfInterest, id);
     }
+
+    public Entity newFeatureOfInterest(String name, String description, GeoJsonObject location) {
+        return newFeatureOfInterest(name, description, CONTENT_TYPE_APPLICATION_GEOJSON, location);
+    }
+
+    public Entity newFeatureOfInterest(String name, String description, String encodingType, Object location) {
+        return newFeatureOfInterest()
+                .setProperty(EP_NAME, name)
+                .setProperty(EP_DESCRIPTION, description)
+                .setProperty(EP_ENCODINGTYPE, encodingType)
+                .setProperty(EP_FEATURE, location);
+    }
+
 }
