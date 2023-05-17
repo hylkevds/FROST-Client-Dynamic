@@ -32,11 +32,9 @@ import java.net.URI;
 import java.util.List;
 
 /**
- * CRUD operations for data access objects (Dao).
- *
- * @param <T> the entity's type
+ * CRUD operations for Entity Types.
  */
-public interface Dao<T extends Entity> {
+public interface Dao {
 
     /**
      * Create a new entity.
@@ -44,7 +42,7 @@ public interface Dao<T extends Entity> {
      * @param entity the entity to create
      * @throws ServiceFailureException the operation failed
      */
-    void create(T entity) throws ServiceFailureException;
+    void create(Entity entity) throws ServiceFailureException;
 
     /**
      * Find an entity.
@@ -53,7 +51,7 @@ public interface Dao<T extends Entity> {
      * @return the entity
      * @throws ServiceFailureException the operation failed
      */
-    T find(Id id) throws ServiceFailureException;
+    Entity find(Id id) throws ServiceFailureException;
 
     /**
      * Find the entity related to the given parent, like the Thing for a
@@ -64,7 +62,7 @@ public interface Dao<T extends Entity> {
      * @return the singular entity linked from the parent.
      * @throws ServiceFailureException the operation failed
      */
-    public T find(Entity parent, NavigationPropertyEntity npe) throws ServiceFailureException;
+    public Entity find(Entity parent, NavigationPropertyEntity npe) throws ServiceFailureException;
 
     /**
      * Find an entity.
@@ -73,7 +71,7 @@ public interface Dao<T extends Entity> {
      * @return the entity
      * @throws ServiceFailureException the operation failed
      */
-    T find(URI uri) throws ServiceFailureException;
+    Entity find(URI uri) throws ServiceFailureException;
 
     /**
      * Update an entity.
@@ -81,7 +79,7 @@ public interface Dao<T extends Entity> {
      * @param entity the entity to update
      * @throws ServiceFailureException the operation failed
      */
-    void update(T entity) throws ServiceFailureException;
+    void update(Entity entity) throws ServiceFailureException;
 
     /**
      * Update the given entity with the given patch. Does not update the entity
@@ -91,7 +89,7 @@ public interface Dao<T extends Entity> {
      * @param patch The patch to apply to the entity.
      * @throws ServiceFailureException the operation failed
      */
-    void patch(T entity, List<JsonPatchOperation> patch) throws ServiceFailureException;
+    void patch(Entity entity, List<JsonPatchOperation> patch) throws ServiceFailureException;
 
     /**
      * Delete an entity.
@@ -99,7 +97,7 @@ public interface Dao<T extends Entity> {
      * @param entity the entity to delete
      * @throws ServiceFailureException the operation failed
      */
-    void delete(T entity) throws ServiceFailureException;
+    void delete(Entity entity) throws ServiceFailureException;
 
     /**
      * Start a query to find an entity collection.

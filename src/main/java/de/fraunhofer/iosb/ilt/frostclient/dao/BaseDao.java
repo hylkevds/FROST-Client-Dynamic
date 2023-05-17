@@ -57,11 +57,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The entity independent implementation of a data access object. Specific
- * entity Daos can be implemented by inheriting from this class and supplying
- * three arguments in the constructor.
+ * The implementation of a data access object.
  */
-public class BaseDao implements Dao<Entity> {
+public class BaseDao implements Dao {
 
     public static final ContentType APPLICATION_JSON_PATCH = ContentType.create("application/json-patch+json", Consts.UTF_8);
     /**

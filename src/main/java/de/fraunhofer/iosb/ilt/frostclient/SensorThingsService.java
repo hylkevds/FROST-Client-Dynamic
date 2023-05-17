@@ -297,7 +297,7 @@ public class SensorThingsService {
         return new Query(this, type);
     }
 
-    public Dao<Entity> dao(EntityType type) {
+    public Dao dao(EntityType type) {
         return new BaseDao(this, type);
     }
 

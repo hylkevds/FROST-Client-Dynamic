@@ -236,7 +236,7 @@ public class Entity {
         return new Query(service, this, navigationPropery);
     }
 
-    public Dao<Entity> dao(NavigationPropertyEntitySet navigationPropery) {
+    public Dao dao(NavigationPropertyEntitySet navigationPropery) {
         if (service == null) {
             throw new IllegalArgumentException("Can not query from an entity not associated with a service.");
         }
