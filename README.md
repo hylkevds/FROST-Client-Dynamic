@@ -28,7 +28,7 @@ Add the dependency:
 <dependency>
     <groupId>de.fraunhofer.iosb.ilt</groupId>
     <artifactId>FROST-Client-Dynamic</artifactId>
-    <version>2.0-SNAPSHOT</version>
+    <version>2.0</version>
 </dependency>
 
 ```
@@ -37,7 +37,7 @@ Add the dependency:
 
 Add the dependency:
 ```gradle
-compile 'de.fraunhofer.iosb.ilt:FROST-Client-Dynamic:2.0-SNAPSHOT'
+compile 'de.fraunhofer.iosb.ilt:FROST-Client-Dynamic:2.0'
 ```
 
 ## API
@@ -64,9 +64,9 @@ Entity thing = new Entity(modelSensing.etThing)
 service.create(thing);
 
 // get Thing with numeric id 1234
-thing = service.things().find(1234l);
+thing = service.dao(modelSensing.etThing).find(1234l);
 // get Thing with String id ab12cd
-thing = service.things().find("ab12cd");
+thing = service.dao(modelSensing.etThing).find("ab12cd");
 
 thing.setDescription("Things change...");
 service.update(thing);
@@ -79,8 +79,7 @@ service.delete(thing);
 Entity Sets are represented by instances of `EntityList<>`. The query parameters specified by the SensorThingsAPI standard can be applied to queries.
 
 ```java
-EntityList<Thing> things = service.things()
-                            .query()
+EntitySet things = service.query(modelSensing.etThing)
                             .count()
                             .orderBy("description")
                             .select("name","id","description")
@@ -90,25 +89,25 @@ EntityList<Thing> things = service.things()
                             .top(10)
                             .list();
 
-for (Thing thing : things) {
+for (Entity thing : things) {
     System.out.println("So many things!");
 }
 ```
 
-Entity sets only load so many entities at a time. If you want to get *all* entities,
-and there are more entities than the $top parameter allows you get in one request, you can
-use the `EntityList.fullIterator();` Iterator.
+Entity sets only load so many entities at a time, but the iterator will automatically
+load more entities when more entities exist on the server. To get only the currently
+loaded entities, use the `toList()` method to get the List<Entity> of currently
+loaded entites.
 
 ```java
-EntityList<Observations> observations = service.observations()
-                            .query()
+List<Entity> observations = service.query(modelSensing.etObservation)
                             .count()
                             .top(1000)
-                            .list();
+                            .list()
+                            .toList();
 
-Iterator<Observation> i = observations.fullIterator();
-while (i.hasNext()) {
-    Observation obs = i.next();
+for (Entity obs : observations) {
+    // Only the loaded Observations...
     System.out.println("Observation " + obs.getId() + " has result " + obs.getResult());
 }
 ```
@@ -116,12 +115,12 @@ while (i.hasNext()) {
 Related entity sets can also be queried.
 ```java
 // Get the thing with ID 1
-thing = service.things().find(1l);
+Entity thing = service.dao(modelSensing.etThing).find(1l);
 
 // Get the Datastreams of this Thing
-EntityList<Datastream> dataStreams = thing.datastreams().query().list();
-for (Datastream dataStream : dataStreams) {
-    Sensor sensor = dataStream.getSensor();
+EntitySet dataStreams = thing.query(modelSensing.npThingDatastreams).list();
+for (Entity dataStream : dataStreams) {
+    Entity sensor = dataStream.getProperty(modelSensing.npDatastreamSensor);
     System.out.println("dataStream " + dataStream.getId() + " has Sensor " + sensor.getId());
 }
 
@@ -133,107 +132,12 @@ for (Datastream dataStream : dataStreams) {
 Loading referenced objects in one operation (and therefore in one request) is supported. The *$expand* option of the SensorThingsAPI standard is used internally.
 
 ```java
-Thing thing = service.things().find(1l,
-                Expansion.of(EntityType.THING)
-                .with(ExpandedEntity.from(EntityType.LOCATIONS)));
-EntityList<Location> locations = thing.getLocations();
-```
-
-Or using a simple string to define the expand:
-
-```java
-EntityList<Thing> things = service.things().query()
+EntitySet things = service.query(modelSensing.etThing)
         .expand("Locations($select=name,encodingType,location)")
         .list();
-for (Iterator<Thing> it = things.fullIterator(); it.hasNext();) {
-    Thing thing = it.next();
-    EntityList<Location> locations = thing.getLocations();
+for (entity Thing : things) {
+    EntitySet locations = thing.getProperty(modelSensing.npThingLocations);
 }
-```
-
-
-### DataArray for Observation creation
-
-Using DataArrays for creating Observations is more efficient, since only one http request
- is done, and the observations are more efficiently encoded in this request, so the request
- is smaller than the sum of the separate, normal requests.
-
-```java
-Set<DataArrayValue.Property> properties = new HashSet<>();
-properties.add(DataArrayValue.Property.Result);
-properties.add(DataArrayValue.Property.PhenomenonTime);
-
-DataArrayValue dav1 = new DataArrayValue(datastream1, properties);
-dav1.addObservation(observation1);
-dav1.addObservation(observation2);
-dav1.addObservation(observation3);
-
-DataArrayValue dav2 = new DataArrayValue(multiDatastream1, properties);
-dav2.addObservation(observation4);
-dav2.addObservation(observation5);
-dav2.addObservation(observation6);
-
-DataArrayDocument dad = new DataArrayDocument();
-dad.addDataArrayValue(dav1);
-dad.addDataArrayValue(dav2);
-
-service.create(dad);
-
-```
-
-### Subscription via MQTT
-
-To be notified about changes to entities or entity sets you can use MQTT subscriptions.
-
-```java
-// subscribe directly to an entity, topic: [version]/Datastreams(1)
-MqttSubscription datastreamDirectSubscription = DatastreamBuilder
-		.builder()
-		.service(service)
-		.id(new IdLong(1L))
-		.build()
-		.subscribe(x -> System.out.println(x.getId()));
-service.unsubscribe(datastreamDirectSubscription);
-
-// subscribe to an entity relative to another, topic: [version]/Datastreams(1)/Thing
-MqttSubscription thingViaDatastreamSubscription = DatastreamBuilder
-		.builder()
-		.service(service)
-		.id(new IdLong(1L))
-		.build()
-		.<Thing>subscribeRelative(x -> System.out.println(x.getId()), EntityType.THING);
-service.unsubscribe(thingViaDatastreamSubscription);
-
-// subscribe directly to an entity set, topic: [version]/Observations
-MqttSubscription observationsDirectSubscription = service
-		.observations()
-		.subscribe(x -> System.out.println(x.getId()));
-service.unsubscribe(observationsDirectSubscription);
-
-// subscribe directly to an entity set including only selected properties in the response,
-// topic: [version]/Observations?$select=result,resultTime
-MqttSubscription observationsDirectWithSelectSubscription = service
-		.observations()
-		.subscribe(x -> System.out.println(x.getId()), EntityProperty.RESULT, EntityProperty.RESULTTIME);
-service.unsubscribe(observationsDirectWithSelectSubscription);
-
-// subscribe directly to an entity set but locally filter incoming notifications before calling the handler function
-// here: only fire handler if observation was man since yesterday
-MqttSubscription observationsDirectWithFilterSubscription = service
-		.observations()
-		.subscribe(x -> x.getResultTime().isAfter(ZonedDateTime.now().minusDays(1)),
-				x -> System.out.println(x.getId()),
-				EntityProperty.RESULT, EntityProperty.RESULTTIME);
-service.unsubscribe(observationsDirectWithFilterSubscription);
-
-// subscribe to an entity relative to another, topic: [version]/Datastreams(1)/Observations
-MqttSubscription observationsViaDatastreamSubscription = DatastreamBuilder
-		.builder()
-		.service(service)
-		.id(new IdLong(1L))
-		.build()
-		.<Observation>subscribeRelative(x -> System.out.println(x.getId()), EntityType.OBSERVATIONS);
-service.unsubscribe(observationsViaDatastreamSubscription);
 ```
 
 
