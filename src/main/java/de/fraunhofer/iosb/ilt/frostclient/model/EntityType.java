@@ -30,7 +30,6 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +55,7 @@ public class EntityType implements Comparable<EntityType> {
     /**
      * The Property that is the primary key of the entity.
      */
-    private EntityPropertyMain primaryKey;
+    private PrimaryKey primaryKey;
 
     /**
      * The Set of PROPERTIES that Entities of this type have.
@@ -108,7 +107,7 @@ public class EntityType implements Comparable<EntityType> {
                 propertiesByName.put(alias, property);
             }
             if (primaryKey == null) {
-                primaryKey = propertyMain;
+                primaryKey = new PkSingle(propertyMain);
             }
         }
         return this;
@@ -124,6 +123,9 @@ public class EntityType implements Comparable<EntityType> {
                 entityProperties.add(entityPropertyMain);
             }
             if (property instanceof NavigationPropertyAbstract np) {
+                if (np.getInverse() == null) {
+                    throw new IllegalStateException("NavigationProperty " + np.getName() + " has no inverse.");
+                }
                 if (np.getInverse().getEntityType() == null) {
                     np.getInverse().setEntityType(this);
                 }
@@ -138,7 +140,7 @@ public class EntityType implements Comparable<EntityType> {
         }
     }
 
-    public EntityPropertyMain<Id> getPrimaryKey() {
+    public PrimaryKey getPrimaryKey() {
         return primaryKey;
     }
 
@@ -259,20 +261,6 @@ public class EntityType implements Comparable<EntityType> {
         int hash = 7;
         hash = 67 * hash + Objects.hashCode(this.entityName);
         return hash;
-    }
-
-    public Id parsePrimaryKey(String input) {
-        Object rawId = primaryKey.getType().parseFromUrl(input);
-        if (rawId instanceof UUID uuid) {
-            return new IdUuid(uuid);
-        }
-        if (rawId instanceof Number number) {
-            return new IdLong(number.longValue());
-        }
-        if (rawId instanceof CharSequence) {
-            return new IdString(rawId.toString());
-        }
-        throw new IllegalArgumentException("Can not use " + ((rawId == null) ? "null" : rawId.getClass().getName()) + " (" + input + ") as an Id");
     }
 
 }

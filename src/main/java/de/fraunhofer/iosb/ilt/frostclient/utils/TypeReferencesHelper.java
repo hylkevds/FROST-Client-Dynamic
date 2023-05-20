@@ -25,7 +25,6 @@ package de.fraunhofer.iosb.ilt.frostclient.utils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import de.fraunhofer.iosb.ilt.frostclient.model.Entity;
 import de.fraunhofer.iosb.ilt.frostclient.model.EntitySet;
-import de.fraunhofer.iosb.ilt.frostclient.model.Id;
 import de.fraunhofer.iosb.ilt.frostclient.model.ext.TimeInstant;
 import de.fraunhofer.iosb.ilt.frostclient.model.ext.TimeInterval;
 import de.fraunhofer.iosb.ilt.frostclient.model.ext.TimeValue;
@@ -68,9 +67,6 @@ public class TypeReferencesHelper {
         // Empty on purpose.
     };
     public static final TypeReference<GeoJsonObject> TYPE_REFERENCE_GEOJSONOBJECT = new TypeReference<GeoJsonObject>() {
-        // Empty on purpose.
-    };
-    public static final TypeReference<Id> TYPE_REFERENCE_ID = new TypeReference<Id>() {
         // Empty on purpose.
     };
     public static final TypeReference<Integer> TYPE_REFERENCE_INTEGER = new TypeReference<Integer>() {

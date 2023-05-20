@@ -31,7 +31,6 @@ import static de.fraunhofer.iosb.ilt.frostclient.utils.TypeReferencesHelper.TYPE
 
 import de.fraunhofer.iosb.ilt.frostclient.model.Entity;
 import de.fraunhofer.iosb.ilt.frostclient.model.EntityType;
-import de.fraunhofer.iosb.ilt.frostclient.model.Id;
 import de.fraunhofer.iosb.ilt.frostclient.model.ModelRegistry;
 import de.fraunhofer.iosb.ilt.frostclient.model.ext.TimeInstant;
 import de.fraunhofer.iosb.ilt.frostclient.model.ext.TimeInterval;
@@ -120,7 +119,7 @@ public class SensorThingsSensingV11 {
     public static final EntityPropertyMain<Map<String, Object>> EP_PROPERTIES = new EntityPropertyMain<>(NAME_EP_PROPERTIES, TypeComplex.STA_MAP, false);
     public static final EntityPropertyMain<String> EP_ENCODINGTYPE = new EntityPropertyMain<>(NAME_EP_ENCODINGTYPE, EDM_STRING);
 
-    public static final EntityPropertyMain<?> EP_ID = new EntityPropertyMain<>(AT_IOT_ID, EDM_UNTYPED);
+    public static final EntityPropertyMain<Object> EP_ID = new EntityPropertyMain<>(AT_IOT_ID, EDM_UNTYPED);
 
     public final NavigationPropertyEntity npObservationDatastream = new NavigationPropertyEntity(NAME_DATASTREAM);
     public final NavigationPropertyEntity npObservationFeatureofinterest = new NavigationPropertyEntity(NAME_FEATUREOFINTEREST);
@@ -261,8 +260,9 @@ public class SensorThingsSensingV11 {
         return new Entity(etThing);
     }
 
-    public Entity newThing(Id id) {
-        return new Entity(etThing, id);
+    public Entity newThing(Object id) {
+        return new Entity(etThing)
+                .setPrimaryKeyValues(id);
     }
 
     public Entity newThing(String name, String description) {
@@ -280,8 +280,9 @@ public class SensorThingsSensingV11 {
         return new Entity(etLocation);
     }
 
-    public Entity newLocation(Id id) {
-        return new Entity(etLocation, id);
+    public Entity newLocation(Object id) {
+        return new Entity(etLocation)
+                .setPrimaryKeyValues(id);
     }
 
     public Entity newLocation(String name, String description, GeoJsonObject location) {
@@ -300,8 +301,9 @@ public class SensorThingsSensingV11 {
         return new Entity(etDatastream);
     }
 
-    public Entity newDatastream(Id id) {
-        return new Entity(etDatastream, id);
+    public Entity newDatastream(Object id) {
+        return new Entity(etDatastream)
+                .setPrimaryKeyValues(id);
     }
 
     public Entity newDatastream(String name, String description, UnitOfMeasurement uom) {
@@ -320,8 +322,9 @@ public class SensorThingsSensingV11 {
         return new Entity(etSensor);
     }
 
-    public Entity newSensor(Id id) {
-        return new Entity(etSensor, id);
+    public Entity newSensor(Object id) {
+        return new Entity(etSensor)
+                .setPrimaryKeyValues(id);
     }
 
     public Entity newSensor(String name, String description, String encodingType, String metaData) {
@@ -336,8 +339,9 @@ public class SensorThingsSensingV11 {
         return new Entity(etObservedProperty);
     }
 
-    public Entity newObservedProperty(Id id) {
-        return new Entity(etObservedProperty, id);
+    public Entity newObservedProperty(Object id) {
+        return new Entity(etObservedProperty)
+                .setPrimaryKeyValues(id);
     }
 
     public Entity newObservedProperty(String name, String definition, String desription) {
@@ -349,10 +353,6 @@ public class SensorThingsSensingV11 {
 
     public Entity newObservation() {
         return new Entity(etObservation);
-    }
-
-    public Entity newObservation(Id id) {
-        return new Entity(etObservation, id);
     }
 
     public Entity newObservation(Object result) {
@@ -399,8 +399,9 @@ public class SensorThingsSensingV11 {
         return new Entity(etHistoricalLocation);
     }
 
-    public Entity newHistoricalLocation(Id id) {
-        return new Entity(etHistoricalLocation, id);
+    public Entity newHistoricalLocation(Object id) {
+        return new Entity(etHistoricalLocation)
+                .setPrimaryKeyValues(id);
     }
 
     public Entity newHistoricalLocation(ZonedDateTime time) {
@@ -419,8 +420,9 @@ public class SensorThingsSensingV11 {
         return new Entity(etFeatureOfInterest);
     }
 
-    public Entity newFeatureOfInterest(Id id) {
-        return new Entity(etFeatureOfInterest, id);
+    public Entity newFeatureOfInterest(Object id) {
+        return new Entity(etFeatureOfInterest)
+                .setPrimaryKeyValues(id);
     }
 
     public Entity newFeatureOfInterest(String name, String description, GeoJsonObject location) {

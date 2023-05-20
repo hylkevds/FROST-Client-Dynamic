@@ -80,6 +80,7 @@ public class JsonReader {
         ObjectMapper mapper = new ObjectMapper()
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
                 .enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)
+                .enable(DeserializationFeature.USE_LONG_FOR_INTS)
                 .addMixIn(AbstractDataComponent.class, AbstractDataComponentMixin.class)
                 .addMixIn(AbstractSWEIdentifiable.class, AbstractSWEIdentifiableMixin.class)
                 .addMixIn(AbstractConstraint.class, AbstractConstraintMixin.class);

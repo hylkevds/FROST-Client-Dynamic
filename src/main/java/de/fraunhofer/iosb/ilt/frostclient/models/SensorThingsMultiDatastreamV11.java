@@ -44,7 +44,6 @@ import static de.fraunhofer.iosb.ilt.frostclient.utils.TypeReferencesHelper.TYPE
 
 import de.fraunhofer.iosb.ilt.frostclient.model.Entity;
 import de.fraunhofer.iosb.ilt.frostclient.model.EntityType;
-import de.fraunhofer.iosb.ilt.frostclient.model.Id;
 import de.fraunhofer.iosb.ilt.frostclient.model.ModelRegistry;
 import de.fraunhofer.iosb.ilt.frostclient.model.ext.TimeInterval;
 import de.fraunhofer.iosb.ilt.frostclient.model.ext.TimeValue;
@@ -130,8 +129,9 @@ public class SensorThingsMultiDatastreamV11 {
         return new Entity(etMultiDatastream);
     }
 
-    public Entity newMultiDatastream(Id id) {
-        return new Entity(etMultiDatastream, id);
+    public Entity newMultiDatastream(Object id) {
+        return new Entity(etMultiDatastream)
+                .setPrimaryKeyValues(id);
     }
 
     public Entity newMultiDatastream(String name, String description, UnitOfMeasurement... uoms) {
@@ -149,10 +149,6 @@ public class SensorThingsMultiDatastreamV11 {
 
     public Entity newObservation() {
         return new Entity(mr.getEntityTypeForName(SensorThingsSensingV11.NAME_OBSERVATION));
-    }
-
-    public Entity newObservation(Id id) {
-        return new Entity(mr.getEntityTypeForName(SensorThingsSensingV11.NAME_OBSERVATION), id);
     }
 
     public Entity newObservation(Object result) {

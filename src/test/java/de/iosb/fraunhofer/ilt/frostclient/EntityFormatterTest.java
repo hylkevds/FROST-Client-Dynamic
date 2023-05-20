@@ -23,6 +23,7 @@
 package de.iosb.fraunhofer.ilt.frostclient;
 
 import static de.fraunhofer.iosb.ilt.frostclient.models.SensorThingsSensingV11.EP_DESCRIPTION;
+import static de.fraunhofer.iosb.ilt.frostclient.models.SensorThingsSensingV11.EP_ID;
 import static de.fraunhofer.iosb.ilt.frostclient.models.SensorThingsSensingV11.EP_NAME;
 import static de.fraunhofer.iosb.ilt.frostclient.models.SensorThingsSensingV11.EP_PHENOMENONTIME;
 import static de.fraunhofer.iosb.ilt.frostclient.models.SensorThingsSensingV11.EP_PROPERTIES;
@@ -38,8 +39,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.fraunhofer.iosb.ilt.frostclient.SensorThingsService;
 import de.fraunhofer.iosb.ilt.frostclient.json.serialize.JsonWriter;
 import de.fraunhofer.iosb.ilt.frostclient.model.Entity;
-import de.fraunhofer.iosb.ilt.frostclient.model.IdLong;
-import de.fraunhofer.iosb.ilt.frostclient.model.IdString;
 import de.fraunhofer.iosb.ilt.frostclient.model.ext.TimeInterval;
 import de.fraunhofer.iosb.ilt.frostclient.model.ext.TimeValue;
 import de.fraunhofer.iosb.ilt.frostclient.model.ext.UnitOfMeasurement;
@@ -96,7 +95,7 @@ public class EntityFormatterTest {
                   }
                 }""";
         Entity entity = new Entity(modelSensing.etThing);
-        entity.setId(new IdLong(1L));
+        entity.setProperty(EP_ID, 1L);
         entity.setProperty(EP_NAME, "This thing is an oven.");
         entity.setProperty(EP_DESCRIPTION, "This thing is an oven.");
         entity.setSelfLink("http://example.org/Observations/1");
@@ -129,7 +128,7 @@ public class EntityFormatterTest {
                 .addItem("color", "Silver")
                 .build();
         Entity entity = modelSensing.newThing("This thing is an oven.", "This thing is an oven.", properties);
-        entity.setId(new IdString("aStringAsId"));
+        entity.setProperty(EP_ID, "aStringAsId");
 
         String json = JsonWriter.writeEntity(entity);
         assertTrue(jsonEqual(expResult, json));
@@ -156,9 +155,10 @@ public class EntityFormatterTest {
                   ]
                 }""";
         Entity entity = modelSensing.newThing("This thing is an oven.", "This thing is an oven.", new HashMap<>());
-        entity.setId(new IdLong(1L));
+        entity.setProperty(EP_ID, 1L);
 
-        Entity location = new Entity(modelSensing.etLocation, new IdLong(1L));
+        Entity location = new Entity(modelSensing.etLocation)
+                .setPrimaryKeyValues(1L);
         entity.getProperty(modelSensing.npThingLocations).add(location);
 
         String json = JsonWriter.writeEntity(entity);
@@ -207,7 +207,7 @@ public class EntityFormatterTest {
                     }
                 }""";
         Entity entity = modelSensing.newLocation("OvenLocation", "The location of an oven.", new Point(-114.05, 51.05))
-                .setId(new IdLong(1L));
+                .setProperty(EP_ID, 1L);
 
         String json = JsonWriter.writeEntity(entity);
         assertTrue(jsonEqual(expResult, json));
@@ -227,7 +227,7 @@ public class EntityFormatterTest {
                     "location": "Third house on the left."
                 }""";
         Entity entity = modelSensing.newLocation("OvenLocation", "The location of an oven.", "text/plain", "Third house on the left.")
-                .setId(new IdLong(1L));
+                .setProperty(EP_ID, 1L);
 
         String json = JsonWriter.writeEntity(entity);
         assertTrue(jsonEqual(expResult, json));
@@ -334,16 +334,16 @@ public class EntityFormatterTest {
         Entity ds1 = modelSensing.newDatastream("datastream name 1", "datastream 1", um1);
         ds1.setProperty(modelSensing.npDatastreamObservedproperty, modelSensing.newObservedProperty("Luminous Flux", "http://www.qudt.org/qudt/owl/1.0.0/quantity/Instances.html/LuminousFlux", "observedProperty 1"));
         ds1.setProperty(modelSensing.npDatastreamSensor, modelSensing.newSensor("sensor name 1", "sensor 1", "application/text", "Light flux sensor"));
-        ds1.getProperty(modelSensing.npDatastreamObservations).add(modelSensing.newObservation(3, ZonedDateTime.parse("2015-03-03T00:00:00Z")));
-        ds1.getProperty(modelSensing.npDatastreamObservations).add(modelSensing.newObservation(4, ZonedDateTime.parse("2015-03-04T00:00:00Z")));
+        ds1.getProperty(modelSensing.npDatastreamObservations).add(modelSensing.newObservation(3L, ZonedDateTime.parse("2015-03-03T00:00:00Z")));
+        ds1.getProperty(modelSensing.npDatastreamObservations).add(modelSensing.newObservation(4L, ZonedDateTime.parse("2015-03-04T00:00:00Z")));
         thing.getProperty(modelSensing.npThingDatastreams).add(ds1);
 
         UnitOfMeasurement um2 = new UnitOfMeasurement("Centigrade", "C", "http://www.qudt.org/qudt/owl/1.0.0/unit/Instances.html/Lumen");
         Entity ds2 = modelSensing.newDatastream("datastream name 2", "datastream 2", um2);
         ds2.setProperty(modelSensing.npDatastreamObservedproperty, modelSensing.newObservedProperty("Tempretaure", "http://www.qudt.org/qudt/owl/1.0.0/quantity/Instances.html/Tempreture", "observedProperty 2"));
         ds2.setProperty(modelSensing.npDatastreamSensor, modelSensing.newSensor("sensor name 2", "sensor 2", "application/text", "Tempreture sensor"));
-        ds2.getProperty(modelSensing.npDatastreamObservations).add(modelSensing.newObservation(5, ZonedDateTime.parse("2015-03-05T00:00:00Z")));
-        ds2.getProperty(modelSensing.npDatastreamObservations).add(modelSensing.newObservation(6, ZonedDateTime.parse("2015-03-06T00:00:00Z")));
+        ds2.getProperty(modelSensing.npDatastreamObservations).add(modelSensing.newObservation(5L, ZonedDateTime.parse("2015-03-05T00:00:00Z")));
+        ds2.getProperty(modelSensing.npDatastreamObservations).add(modelSensing.newObservation(6L, ZonedDateTime.parse("2015-03-06T00:00:00Z")));
         thing.getProperty(modelSensing.npThingDatastreams).add(ds2);
 
         String json = JsonWriter.writeEntity(thing);
@@ -362,7 +362,7 @@ public class EntityFormatterTest {
                     "result": 70.40
                 }""";
         Entity entity = modelSensing.newObservation(new BigDecimal("70.40"), ZonedDateTime.parse("2014-12-31T11:59:59Z"))
-                .setId(new IdLong(1L));
+                .setProperty(EP_ID, 1L);
 
         String json = JsonWriter.writeEntity(entity);
         assertTrue(jsonEqual(expResult, json));
@@ -383,7 +383,7 @@ public class EntityFormatterTest {
                     "result": 70.40
                 }""";
         Entity entity = modelSensing.newObservation(new BigDecimal("70.40"), TimeInterval.parse("2014-12-31T11:59:59Z/2014-12-31T12:01:01Z"))
-                .setId(new IdLong(1L))
+                .setProperty(EP_ID, 1L)
                 .setSelfLink("http://example.org/Observations/1");
 
         String json = JsonWriter.writeEntity(entity);
@@ -403,7 +403,7 @@ public class EntityFormatterTest {
                     "result": null
                 }""";
         Entity entity = modelSensing.newObservation()
-                .setId(new IdLong(1L))
+                .setProperty(EP_ID, 1L)
                 .setProperty(EP_RESULT, null)
                 .setProperty(EP_PHENOMENONTIME, TimeValue.create(ZonedDateTime.parse("2014-12-31T11:59:59Z")));
 
@@ -499,7 +499,7 @@ public class EntityFormatterTest {
                     }
                 }""";
         Entity entity = modelTasking.newTaskingCapability("Control Light", "Turn the light on and off, as well as specifying light color.")
-                .setId(new IdLong(1L))
+                .setProperty(EP_ID, 1L)
                 .setProperty(EP_TASKINGPARAMETERS, taskingParametersBuilder()
                         .taskingParameter(
                                 "status",

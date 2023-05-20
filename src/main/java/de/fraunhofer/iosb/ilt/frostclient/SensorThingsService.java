@@ -32,6 +32,7 @@ import de.fraunhofer.iosb.ilt.frostclient.model.EntityType;
 import de.fraunhofer.iosb.ilt.frostclient.model.ModelRegistry;
 import de.fraunhofer.iosb.ilt.frostclient.model.property.NavigationProperty;
 import de.fraunhofer.iosb.ilt.frostclient.query.Query;
+import de.fraunhofer.iosb.ilt.frostclient.utils.ParserUtils;
 import de.fraunhofer.iosb.ilt.frostclient.utils.TokenManager;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -190,30 +191,6 @@ public class SensorThingsService {
     }
 
     /**
-     * The local path to the entity or collection. e.g.:
-     * <ul>
-     * <li>Things(2)/Datastreams</li>
-     * <li>Datastreams(5)/Thing</li>
-     * </ul>
-     *
-     * @param parent The entity holding the relation, can be null.
-     * @param relation The relation or collection to get.
-     * @return The path to the entity collection.
-     */
-    public String getPath(Entity parent, NavigationProperty relation) {
-        if (parent == null) {
-            throw new IllegalArgumentException("Can't generate path for null entity.");
-        }
-        if (!parent.getEntityType().getNavigationProperties().contains(relation)) {
-            throw new IllegalArgumentException("Entity of type " + parent.getEntityType() + " has no relation of type " + relation + ".");
-        }
-        if (parent.getId() == null) {
-            throw new IllegalArgumentException("Can not create a path with a parent without id.");
-        }
-        return String.format("%s(%s)/%s", parent.getEntityType().plural, parent.getId().getUrl(), relation.getName());
-    }
-
-    /**
      * The full path to the entity or collection.
      *
      * @param parent The entity holding the relation, can be null.
@@ -223,7 +200,7 @@ public class SensorThingsService {
      */
     public URL getFullPath(Entity parent, NavigationProperty relation) throws ServiceFailureException {
         try {
-            return new URL(getEndpoint().toString() + getPath(parent, relation));
+            return new URL(getEndpoint().toString() + ParserUtils.relationPath(parent, relation));
         } catch (MalformedURLException exc) {
             LOGGER.error("Failed to generate URL.", exc);
             throw new ServiceFailureException(exc);

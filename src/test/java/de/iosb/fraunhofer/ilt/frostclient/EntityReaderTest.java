@@ -23,6 +23,7 @@
 package de.iosb.fraunhofer.ilt.frostclient;
 
 import static de.fraunhofer.iosb.ilt.frostclient.models.SensorThingsSensingV11.EP_DESCRIPTION;
+import static de.fraunhofer.iosb.ilt.frostclient.models.SensorThingsSensingV11.EP_ID;
 import static de.fraunhofer.iosb.ilt.frostclient.models.SensorThingsSensingV11.EP_NAME;
 import static de.fraunhofer.iosb.ilt.frostclient.models.SensorThingsSensingV11.EP_RESULT;
 import static de.fraunhofer.iosb.ilt.frostclient.models.SensorThingsSensingV11.EP_RESULTTIME;
@@ -34,7 +35,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import de.fraunhofer.iosb.ilt.frostclient.SensorThingsService;
 import de.fraunhofer.iosb.ilt.frostclient.model.Entity;
 import de.fraunhofer.iosb.ilt.frostclient.model.EntitySet;
-import de.fraunhofer.iosb.ilt.frostclient.model.IdLong;
 import de.fraunhofer.iosb.ilt.frostclient.models.SensorThingsSensingV11;
 import de.fraunhofer.iosb.ilt.frostclient.models.SensorThingsTaskingV11;
 import de.fraunhofer.iosb.ilt.swe.common.constraint.AllowedValues;
@@ -79,7 +79,7 @@ public class EntityReaderTest {
         Entity observation = service.getJsonReader().parseEntity(modelSensing.etObservation, json);
 
         Entity expected = modelSensing.newObservation(BigDecimal.valueOf(0.15), ZonedDateTime.parse("2016-01-07T02:00:00.000Z"))
-                .setId(new IdLong(7179373L))
+                .setProperty(SensorThingsSensingV11.EP_ID, 7179373L)
                 .setProperty(EP_RESULTTIME, null)
                 .setSelfLink("https://server.de/SensorThingsService/v1.0/Observations(7179373)");
 
@@ -154,7 +154,7 @@ public class EntityReaderTest {
         assertEquals("https://server.de/SensorThingsService/v1.0/Things?$top=2&$skip=14&$expand=Datastreams%28%24top%3D2%3B%24count%3Dtrue%29", things.getNextLink());
         List<Entity> thingList = things.toList();
         Entity thing = thingList.get(0);
-        assertEquals(new IdLong(19L), thing.getId());
+        assertEquals(19L, thing.getProperty(EP_ID));
         assertEquals("Recoaro 1000", thing.getProperty(EP_NAME));
         assertEquals("Weather station Recoaro 1000", thing.getProperty(EP_DESCRIPTION));
 
@@ -164,7 +164,7 @@ public class EntityReaderTest {
 
         List<Entity> dsList = datastreams.toList();
         Entity datastream = dsList.get(0);
-        assertEquals(new IdLong(66L), datastream.getId());
+        assertEquals(66L, datastream.getPrimaryKeyValues()[0]);
         assertEquals("Air Temperature Recoaro 1000", datastream.getProperty(EP_NAME));
         assertEquals("The Air Temperature at Recoaro 1000", datastream.getProperty(EP_DESCRIPTION));
 
@@ -172,12 +172,12 @@ public class EntityReaderTest {
         assertEquals(new BigDecimal("0.0"), result);
 
         datastream = dsList.get(1);
-        assertEquals(new IdLong(130L), datastream.getId());
+        assertEquals(130L, datastream.getProperty(EP_ID));
         assertEquals("Precipitation Recoaro 1000", datastream.getProperty(EP_NAME));
         assertEquals("The Precipitation at Recoaro 1000", datastream.getProperty(EP_DESCRIPTION));
 
         thing = thingList.get(1);
-        assertEquals(new IdLong(20L), thing.getId());
+        assertEquals(20L, thing.getProperty(EP_ID));
         assertEquals("Valdagno", thing.getProperty(EP_NAME));
         assertEquals("Weather station Valdagno", thing.getProperty(EP_DESCRIPTION));
 
@@ -247,7 +247,7 @@ public class EntityReaderTest {
                         .taskingParameter("vaName", vaName)
                         .taskingParameter("vaDescription", vaDescription)
                         .build())
-                .setId(new IdLong(1L));
+                .setProperty(SensorThingsSensingV11.EP_ID, 1L);
         expected.setSelfLink("https://server.de/SensorThingsService/v1.0/TaskingCapabilities(1)");
 
         assertEquals(expected, taskingCap);
@@ -318,7 +318,7 @@ public class EntityReaderTest {
                         .taskingParameter("sourceDatastream", sourceDS)
                         .taskingParameter("destinationDatastream", destDS)
                         .build())
-                .setId(new IdLong(1L))
+                .setProperty(SensorThingsSensingV11.EP_ID, 1L)
                 .setSelfLink("https://server.de/SensorThingsService/v1.0/TaskingCapabilities(1)");
 
         assertEquals(expected, taskingCap);

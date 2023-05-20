@@ -32,6 +32,7 @@ import de.fraunhofer.iosb.ilt.frostclient.model.property.NavigationProperty;
 import de.fraunhofer.iosb.ilt.frostclient.model.property.NavigationPropertyEntity;
 import de.fraunhofer.iosb.ilt.frostclient.model.property.NavigationPropertyEntitySet;
 import de.fraunhofer.iosb.ilt.frostclient.query.Query;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -66,18 +67,30 @@ public class Entity {
         this.entityType = entityType;
     }
 
-    public Entity(EntityType entityType, Id id) {
-        this.entityType = entityType;
-        setId(id);
+    public final PrimaryKey getPrimaryKey() {
+        return entityType.getPrimaryKey();
     }
 
-    public final Id getId() {
-        return getProperty(entityType.getPrimaryKey());
+    public final Object[] getPrimaryKeyValues() {
+        List<EntityPropertyMain> keyProperties = entityType.getPrimaryKey().getKeyProperties();
+        Object[] result = new Object[keyProperties.size()];
+        int idx = 0;
+        for (EntityPropertyMain keyProperty : keyProperties) {
+            result[idx] = getProperty(keyProperty);
+            idx++;
+        }
+        return result;
     }
 
-    public final Entity setId(Id id) {
-        entityProperties.put(entityType.getPrimaryKey(), id);
-        setProperties.add(entityType.getPrimaryKey());
+    public final Entity setPrimaryKeyValues(Object... values) {
+        int idx = 0;
+        for (EntityPropertyMain keyProperty : entityType.getPrimaryKey().getKeyProperties()) {
+            if (idx >= values.length) {
+                throw new IllegalArgumentException("No value given for keyProperty " + idx);
+            }
+            setProperty(keyProperty, values[idx]);
+            idx++;
+        }
         return this;
     }
 
@@ -230,10 +243,6 @@ public class Entity {
         }
     }
 
-    public boolean isEmpty() {
-        return entityProperties.get(entityType.getPrimaryKey()) != null;
-    }
-
     /**
      * Check if the entity is associated with a service or not.
      *
@@ -252,13 +261,17 @@ public class Entity {
     }
 
     /**
-     * Creates a copy of the entity, with only the ID field set. Useful when
-     * creating a new entity that links to this entity.
+     * Creates a copy of the entity, with only the Primary Key field(s) set.
+     * Useful when creating a new entity that links to this entity.
      *
-     * @return a copy with only the ID field set.
+     * @return a copy with only the Primary Key field set.
      */
     public Entity withOnlyId() {
-        Entity copy = new Entity(entityType, getId());
+        Entity copy = new Entity(entityType);
+        List<EntityPropertyMain> pkProps = getPrimaryKey().getKeyProperties();
+        for (EntityPropertyMain pkProp : pkProps) {
+            copy.setProperty(pkProp, getProperty(pkProp));
+        }
         copy.setService(service);
         return copy;
     }
@@ -305,6 +318,6 @@ public class Entity {
 
     @Override
     public String toString() {
-        return "Entity: " + entityType;
+        return "Entity: " + entityType + " " + Arrays.toString(getPrimaryKeyValues());
     }
 }

@@ -29,18 +29,17 @@ import de.fraunhofer.iosb.ilt.frostclient.exception.ServiceFailureException;
 import de.fraunhofer.iosb.ilt.frostclient.json.serialize.JsonWriter;
 import de.fraunhofer.iosb.ilt.frostclient.model.Entity;
 import de.fraunhofer.iosb.ilt.frostclient.model.EntityType;
-import de.fraunhofer.iosb.ilt.frostclient.model.Id;
-import de.fraunhofer.iosb.ilt.frostclient.model.IdLong;
-import de.fraunhofer.iosb.ilt.frostclient.model.IdString;
 import de.fraunhofer.iosb.ilt.frostclient.model.property.NavigationPropertyEntity;
 import de.fraunhofer.iosb.ilt.frostclient.model.property.NavigationPropertyEntitySet;
 import de.fraunhofer.iosb.ilt.frostclient.query.Query;
+import de.fraunhofer.iosb.ilt.frostclient.utils.ParserUtils;
 import de.fraunhofer.iosb.ilt.frostclient.utils.Utils;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.http.Consts;
 import org.apache.http.Header;
 import org.apache.http.ParseException;
@@ -127,8 +126,8 @@ public class BaseDao implements Dao {
             String newLocation = locationHeader.getValue();
             int pos1 = newLocation.indexOf('(') + 1;
             int pos2 = newLocation.indexOf(')', pos1);
-            String stringId = newLocation.substring(pos1, pos2);
-            entity.setId(Id.tryToParse(stringId));
+            String stringPkValue = newLocation.substring(pos1, pos2);
+            entity.setPrimaryKeyValues(ParserUtils.tryToParse(stringPkValue));
             entity.setService(service);
         } catch (IOException exc) {
             throw new ServiceFailureException("Failed to create entity.", exc);
@@ -137,37 +136,13 @@ public class BaseDao implements Dao {
     }
 
     @Override
-    public Entity find(Id id) throws ServiceFailureException {
+    public Entity find(Object... pkValues) throws ServiceFailureException {
         try {
-            URIBuilder uriBuilder = new URIBuilder(service.getEndpoint().toString() + entityPath(id));
-            return find(uriBuilder.build());
+            URI uri = buildUri(pkValues);
+            return find(uri);
         } catch (URISyntaxException ex) {
             throw new ServiceFailureException(ex);
         }
-    }
-
-    /**
-     * Find the entity with the given Long id. This is a shorthand for find(new
-     * IdLong(id));
-     *
-     * @param id the entity's unique id
-     * @return the entity
-     * @throws ServiceFailureException the operation failed
-     */
-    public Entity find(long id) throws ServiceFailureException {
-        return find(new IdLong(id));
-    }
-
-    /**
-     * Find the entity with the given String id. This is a shorthand for
-     * find(new IdLong(id));
-     *
-     * @param id the entity's unique id
-     * @return the entity
-     * @throws ServiceFailureException the operation failed
-     */
-    public Entity find(String id) throws ServiceFailureException {
-        return find(new IdString(id));
     }
 
     @Override
@@ -202,12 +177,11 @@ public class BaseDao implements Dao {
     @Override
     public void update(Entity entity) throws ServiceFailureException {
         HttpPatch httpPatch;
-        URIBuilder uriBuilder;
         String json;
         try {
-            uriBuilder = new URIBuilder(service.getEndpoint().toString() + entityPath(entity.getId()));
+            final URI uri = buildUri(entity.getPrimaryKeyValues());
             json = JsonWriter.writeEntity(entity);
-            httpPatch = new HttpPatch(uriBuilder.build());
+            httpPatch = new HttpPatch(uri);
         } catch (JsonProcessingException | URISyntaxException ex) {
             throw new ServiceFailureException(ex);
         }
@@ -226,12 +200,11 @@ public class BaseDao implements Dao {
     @Override
     public void patch(Entity entity, List<JsonPatchOperation> patch) throws ServiceFailureException {
         HttpPatch httpPatch;
-        URIBuilder uriBuilder;
         String json;
         try {
-            uriBuilder = new URIBuilder(service.getEndpoint().toString() + this.entityPath(entity.getId()));
+            final URI uri = buildUri(entity.getPrimaryKeyValues());
             json = JsonWriter.writeObject(patch);
-            httpPatch = new HttpPatch(uriBuilder.build());
+            httpPatch = new HttpPatch(uri);
         } catch (URISyntaxException | JsonProcessingException ex) {
             throw new ServiceFailureException(ex);
         }
@@ -249,11 +222,10 @@ public class BaseDao implements Dao {
 
     @Override
     public void delete(Entity entity) throws ServiceFailureException {
-        URIBuilder uriBuilder;
         HttpDelete httpDelete;
         try {
-            uriBuilder = new URIBuilder(service.getEndpoint().toString() + this.entityPath(entity.getId()));
-            httpDelete = new HttpDelete(uriBuilder.build());
+            final URI uri = buildUri(entity.getPrimaryKeyValues());
+            httpDelete = new HttpDelete(uri);
         } catch (URISyntaxException ex) {
             throw new ServiceFailureException(ex);
         }
@@ -275,8 +247,15 @@ public class BaseDao implements Dao {
         return new Query(service, parent, navigationLink);
     }
 
-    private String entityPath(Id id) {
-        return String.format("%s(%s)", entityType.plural, id.getUrl());
+    private URI buildUri(Object[] pkValues) throws NotImplementedException, URISyntaxException {
+        URIBuilder uriBuilder;
+        if (pkValues.length == 1) {
+            uriBuilder = new URIBuilder(service.getEndpoint().toString() + ParserUtils.entityPath(entityType, pkValues[0]));
+        } else {
+            throw new NotImplementedException("Multi-valued primary keys are not supported yet.");
+        }
+        final URI uri = uriBuilder.build();
+        return uri;
     }
 
     protected SensorThingsService getService() {

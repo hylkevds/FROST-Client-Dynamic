@@ -27,7 +27,6 @@ import static de.fraunhofer.iosb.ilt.frostclient.models.SensorThingsSensingV11.N
 import com.fasterxml.jackson.core.type.TypeReference;
 import de.fraunhofer.iosb.ilt.frostclient.model.Entity;
 import de.fraunhofer.iosb.ilt.frostclient.model.EntityType;
-import de.fraunhofer.iosb.ilt.frostclient.model.Id;
 import de.fraunhofer.iosb.ilt.frostclient.model.ModelRegistry;
 import de.fraunhofer.iosb.ilt.frostclient.model.property.EntityPropertyMain;
 import de.fraunhofer.iosb.ilt.frostclient.model.property.NavigationPropertyEntity;
@@ -117,8 +116,9 @@ public class SensorThingsTaskingV11 {
         return new Entity(etTaskingCapability);
     }
 
-    public Entity newTaskingCapability(Id id) {
-        return new Entity(etTaskingCapability, id);
+    public Entity newTaskingCapability(Object id) {
+        return new Entity(etTaskingCapability)
+                .setPrimaryKeyValues(id);
     }
 
     public Entity newTaskingCapability(String name, String description) {

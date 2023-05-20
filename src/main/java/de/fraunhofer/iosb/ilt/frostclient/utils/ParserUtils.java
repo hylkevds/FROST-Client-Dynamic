@@ -22,12 +22,13 @@
  */
 package de.fraunhofer.iosb.ilt.frostclient.utils;
 
-import de.fraunhofer.iosb.ilt.frostclient.model.Id;
-import de.fraunhofer.iosb.ilt.frostclient.model.IdLong;
-import de.fraunhofer.iosb.ilt.frostclient.model.IdString;
-import de.fraunhofer.iosb.ilt.frostclient.model.IdUuid;
+import de.fraunhofer.iosb.ilt.frostclient.model.Entity;
+import de.fraunhofer.iosb.ilt.frostclient.model.EntityType;
+import de.fraunhofer.iosb.ilt.frostclient.model.property.NavigationProperty;
 import de.fraunhofer.iosb.ilt.frostclient.model.property.type.TypeSimple;
 import java.util.UUID;
+import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.StringUtils;
 
 public class ParserUtils {
 
@@ -35,20 +36,57 @@ public class ParserUtils {
         // Utility class.
     }
 
-    public static Id idFromObject(Object input) {
-        if (input instanceof Id id) {
-            return id;
+    public static String entityPath(EntityType entityType, Object... primaryKeyValues) {
+        return String.format("%s(%s)", entityType.plural, formatKeyValuesForUrl(primaryKeyValues));
+    }
+
+    /**
+     * The local path to an entity or collection. e.g.:
+     * <ul>
+     * <li>Things(2)/Datastreams</li>
+     * <li>Datastreams(5)/Thing</li>
+     * </ul>
+     *
+     * @param parent The entity holding the relation, can be null.
+     * @param relation The relation or collection to get.
+     * @return The path to the entity collection.
+     */
+    public static String relationPath(Entity parent, NavigationProperty relation) {
+        if (parent == null) {
+            throw new IllegalArgumentException("Can't generate path for null entity.");
         }
-        if (input instanceof UUID uuid) {
-            return new IdUuid(uuid);
+        if (!parent.getEntityType().getNavigationProperties().contains(relation)) {
+            throw new IllegalArgumentException("Entity of type " + parent.getEntityType() + " has no relation of type " + relation + ".");
         }
-        if (input instanceof Number number) {
-            return new IdLong(number.longValue());
+
+        return String.format("%s(%s)/%s", parent.getEntityType().plural, formatKeyValuesForUrl(parent.getPrimaryKeyValues()), relation.getName());
+    }
+
+    public static String formatKeyValuesForUrl(Entity entity) {
+        return formatKeyValuesForUrl(entity.getPrimaryKeyValues());
+    }
+
+    public static String formatKeyValuesForUrl(Object... pkeyValues) {
+        if (pkeyValues.length == 1) {
+            if (pkeyValues[0] == null) {
+                throw new IllegalArgumentException("Primary key value must be non-null");
+            }
+            return StringHelper.quoteForUrl(pkeyValues[0]);
+        } else {
+            throw new NotImplementedException("Multi-valued primary keys are not supported yet.");
         }
-        if (input instanceof CharSequence) {
-            return new IdString(input.toString());
+    }
+
+    public static Object[] tryToParse(String input) {
+        if (input.startsWith("'")) {
+            return new Object[]{StringUtils.replace(input.substring(1, input.length() - 1), "''", "'")};
         }
-        throw new IllegalArgumentException("Can not use " + ((input == null) ? "null" : input.getClass().getName()) + " (" + input + ") as an Id");
+        try {
+            return new Object[]{Long.valueOf(input)};
+        } catch (NumberFormatException exc) {
+            // not a long.
+        }
+        return new Object[]{input};
     }
 
     public static final TypeSimple.Parser PARSER_LONG = Long::parseLong;

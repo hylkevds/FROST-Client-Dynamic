@@ -40,7 +40,6 @@ import de.fraunhofer.iosb.ilt.frostclient.model.Property;
 import de.fraunhofer.iosb.ilt.frostclient.model.property.EntityPropertyMain;
 import de.fraunhofer.iosb.ilt.frostclient.model.property.NavigationProperty;
 import de.fraunhofer.iosb.ilt.frostclient.model.property.NavigationPropertyEntitySet;
-import de.fraunhofer.iosb.ilt.frostclient.utils.ParserUtils;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -164,9 +163,6 @@ public class EntityDeserializer extends JsonDeserializer<Entity> {
         if (isNullOrEmpty(propertyData.valueTypeRef)) {
             Object value = parser.readValueAs(Object.class);
             result.setProperty(entityPropertyMain, value);
-        } else if (propertyData.property == entityType.getPrimaryKey()) {
-            Object value = parser.readValueAs(propertyData.valueTypeRef[0]);
-            result.setProperty(entityPropertyMain, ParserUtils.idFromObject(value));
         } else {
             int idx = 0;
             Exception last = null;

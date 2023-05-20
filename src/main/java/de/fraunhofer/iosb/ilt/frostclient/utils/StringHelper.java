@@ -147,6 +147,12 @@ public class StringHelper {
         return StringUtils.replaceChars(StringUtils.abbreviate(string, maxLength), "\n\r\t", "");
     }
 
+    /**
+     * Quote the given value for use in URLs.
+     *
+     * @param in The object to quote.
+     * @return The quoted String.
+     */
     public static String quoteForUrl(Object in) {
         if (in instanceof Number) {
             return in.toString();
