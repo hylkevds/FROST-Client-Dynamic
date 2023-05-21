@@ -264,9 +264,9 @@ public class Entity {
      * Creates a copy of the entity, with only the Primary Key field(s) set.
      * Useful when creating a new entity that links to this entity.
      *
-     * @return a copy with only the Primary Key field set.
+     * @return a copy with only the Primary Key fields set.
      */
-    public Entity withOnlyId() {
+    public Entity withOnlyPk() {
         Entity copy = new Entity(entityType);
         List<EntityPropertyMain> pkProps = getPrimaryKey().getKeyProperties();
         for (EntityPropertyMain pkProp : pkProps) {

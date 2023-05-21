@@ -86,7 +86,7 @@ public class EntitySerializer extends JsonSerializer<Entity> {
             writeEntitySet(np, entitySet, gen);
         } else if (entityOrSet instanceof Entity expandedEntity) {
             if (expandedEntity.hasService()) {
-                gen.writeObjectField(np.getJsonName(), expandedEntity.withOnlyId());
+                gen.writeObjectField(np.getJsonName(), expandedEntity.withOnlyPk());
             } else {
                 gen.writeObjectField(np.getJsonName(), expandedEntity);
             }
