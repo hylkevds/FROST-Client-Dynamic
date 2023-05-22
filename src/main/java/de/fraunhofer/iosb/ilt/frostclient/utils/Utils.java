@@ -72,7 +72,7 @@ public class Utils {
             }
             if (statusCode == 401 || statusCode == 403) {
                 request.getURI();
-                throw new NotAuthorizedException(request.getURI().toString(), response.getStatusLine().getReasonPhrase(), returnContent);
+                throw new NotAuthorizedException(statusCode, request.getURI().toString(), response.getStatusLine().getReasonPhrase(), returnContent);
             }
             if (statusCode == 404) {
                 throw new NotFoundException(request.getURI().toString(), response.getStatusLine().getReasonPhrase(), returnContent);

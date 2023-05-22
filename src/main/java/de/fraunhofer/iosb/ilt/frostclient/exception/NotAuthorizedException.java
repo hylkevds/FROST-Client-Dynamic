@@ -27,7 +27,7 @@ package de.fraunhofer.iosb.ilt.frostclient.exception;
  */
 public class NotAuthorizedException extends StatusCodeException {
 
-    public NotAuthorizedException(String url, String statusMessage, String returnedContent) {
-        super(url, 401, statusMessage, returnedContent);
+    public NotAuthorizedException(int code, String url, String statusMessage, String returnedContent) {
+        super(url, code, statusMessage, returnedContent);
     }
 }
