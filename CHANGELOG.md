@@ -1,8 +1,16 @@
 # Changelog
 
-## Development version 2.0
+## Release Version 2.1
 
-First release!
+**Updates**
+* Replaced the concept of Id with the concept of PrimaryKey.
+  Primary keys point to one or more properties that can have any name.
+* Fixed 403 being returned as 401.
+* Bumped dependency versions
 
-**New Features**
+
+## Release Version 2.0
+
+**Updates**
 * Complete redesign of FROST-Client to become data model agnostic.
+
