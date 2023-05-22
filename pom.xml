@@ -94,7 +94,7 @@
         <version.reflections>0.10.2</version.reflections>
         <version.slf4j>2.0.7</version.slf4j>
         <version.sta-SWE-Common>0.10</version.sta-SWE-Common>
-        <version.time4j>5.9.2</version.time4j>
+        <version.time4j>5.9.3</version.time4j>
     </properties>
 
     <dependencies>
