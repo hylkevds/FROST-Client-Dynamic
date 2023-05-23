@@ -3,6 +3,8 @@
 ## Development Version
 
 **Updates**
+* Added checks when setting or getting properties, throw IllegalArgumentException
+  when the EntityType does not have the property.
 
 
 ## Release Version 2.1

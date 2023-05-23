@@ -155,6 +155,9 @@ public class Entity {
         if (property == ModelRegistry.EP_SELFLINK) {
             return (P) getSelfLink();
         }
+        if (!entityType.hasProperty(property)) {
+            throw new IllegalArgumentException(entityType.entityName + " has no property " + property.getName());
+        }
         if (property instanceof EntityPropertyMain epm) {
             return (P) entityProperties.get(epm);
         }
@@ -180,7 +183,12 @@ public class Entity {
     public <P> Entity setProperty(Property<P> property, P value) {
         if (property == ModelRegistry.EP_SELFLINK) {
             setSelfLink(String.valueOf(value));
-        } else if (property instanceof EntityPropertyMain epm) {
+            return this;
+        }
+        if (!entityType.hasProperty(property)) {
+            throw new IllegalArgumentException(entityType.entityName + " has no property " + property.getName());
+        }
+        if (property instanceof EntityPropertyMain epm) {
             entityProperties.put(epm, value);
             setProperties.add(property);
         } else if (property instanceof NavigationProperty np) {
@@ -226,21 +234,6 @@ public class Entity {
             addNavigationEntity(navProperty, linkedEntity);
         }
         return this;
-    }
-
-    public void setEntityPropertiesSet(boolean set, boolean entityPropertiesOnly) {
-        if (!set) {
-            setProperties.clear();
-        } else {
-            for (EntityPropertyMain property : entityType.getEntityProperties()) {
-                if (!property.isReadOnly()) {
-                    setProperties.add(property);
-                }
-            }
-            if (!entityPropertiesOnly) {
-                setProperties.addAll(entityType.getNavigationEntities());
-            }
-        }
     }
 
     /**

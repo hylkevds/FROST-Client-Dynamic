@@ -182,6 +182,10 @@ public class EntityType implements Comparable<EntityType> {
         return entityProperties;
     }
 
+    public boolean hasProperty(Property property) {
+        return properties.contains(property);
+    }
+
     /**
      * Get the set of Navigation properties.
      *
